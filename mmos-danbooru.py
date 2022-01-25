@@ -1,106 +1,302 @@
 from numpy import diff
 import requests
 import json
-
+import unicodedata
+from pytwitter import Api
 from requests.models import LocationParseError
 
-#URLs for GET REQUEST
-url_posts = 'https://danbooru.donmai.us/posts/'
-url_pools = 'https://danbooru.donmai.us/pools/'
+from bs4 import BeautifulSoup
+from requests import get
 
-#GET REQUEST TAWAWA POOL
-url_http = url_pools + str(10374)
+import time
+import re
 
-url_final = url_http + '.json'
-
-params = dict()
-
-resp_pool = requests.get(url=url_final, params=params)
-data_pool = resp_pool.json()
-
-#POST_IDS OF THE POOL
-post_ids = data_pool["post_ids"]
-
-print(post_ids)
-
-
-#OPENING OUTPUT FILE
-f = open("Tawawa_output.txt", "w")
-
-
-
-
-mmos_dict = {
+mmo_json = {
     "meta" :  {
         "MMO Number" : "number",
         "Twitter Source" : "string",
-        "Twitter Upload Date" : "date",
+        "Twitter Upload Timestamp" : "date",
         "Danbooru Source" : "string",
         "Character Count" : "number",
-        "Characters" : "string",
+        "Character List" : "string",
         "Commentary Title" : "string",
         "Commentary Description" : "string",
+        "Translated Commentary Title" : "string",
+        "Translated Commentary Description" : "string",
         "Notes" : "string", 
         "Rating" : "string",
         "Number of General Content Tags" : "number",
         "General Content Tags" : "string",
         "Preview file url" : "string", #Danbooru or Twitter, whichever is free to use lol
-        "Extra Comment" : "string",
+        "Extra Comment" : "string", #From fandom initially, but it isn't complete and will require revision and new input for the ~150 MMOs that are empty.
     },
     "data" : {
-        
     }
 }
 
-#LOOPING THROUGH THE POST_IDS
-for post_id in post_ids:
+rating_dict = {
+    "s" : "Safe",
+    "q" : "Questionable",
+    "e" : "Explicit"
+}
 
-#GET REQUEST POSTS IN TAWAWA POOL
-    url_http = url_posts + str(post_id)
-    url_final = url_http + '.json'
+fan_descriptions = {}
 
-#    print(url_final)
-#    print(post_id)
 
-    resp_post = requests.get(url=url_final, params=params)
-    data_post = resp_post.json() # Check the JSON Response Content documentation below
+def populate_json(post_ids):
 
-    print(data_post)
+    #LOOPING THROUGH THE POST_IDS
 
-    url_comment = url_http + '/artist_commentary.json'
+    data = {}
 
-    resp_comment = requests.get(url=url_comment, params=params)
-    data_comment = resp_comment.json() # Check the JSON Response Content documentation below
+    for post_id in post_ids:
 
-    print(data_comment)
+        post_json = request_post(post_id)
+        post_commentary_json = request_commentary(post_id)
 
-    input("Press Enter to continue... POST JSON")
+        #print("Post json")
+        #print(post_json)
+        #print("Post commentary json")
+        #print(post_commentary_json)
 
-    character_count = data_post["tag_count_character"]
-    twitter_link = data_post["source"]
+        mmo_number = 0
 
-    if( character_count > 0):
-#        print("Characters present: " + str(character_count ) )
-        character_string = data_post["tag_string_character"]
-#        print("Characters name : " + character_string )
+        if int(post_id) == 1935176:
+            mmo_number = "1"
+        elif int(post_id) == 2005520:
+            mmo_number = "GW SP"
+        else:
+            mmo_number = discover_mmo_number(post_commentary_json)
+
+        print("MMO NUmber -> ")
+        print(mmo_number)
+        print("Length of mmo number -> " + str(len(mmo_number)) + "| Type of mmo_number -> " + str(type(mmo_number) ))
+        mmo_upload_timestamp = discover_upload_timestamp(post_json["source"])
+
+        temp = str(mmo_number)
+        #input("Pause MMO NUMBER 1")
+        print(mmo_number)
+        print("Print fan descriptions found" + fan_descriptions[temp])
+        #input("Pause MMO NUMBER 2")
+        mmo_extra_comment = fan_descriptions[temp]
+
+        mmo = {
+            "twitter_source" : post_json["source"],
+            "mmo_number" : mmo_number,
+            "twitter_source_timestamp" : mmo_upload_timestamp,
+            "danbooru_source" : "https://danbooru.donmai.us/posts/" + str(post_id),
+            "character_count" : post_json["tag_count_character"],
+            "character_list" : post_json["tag_string_character"],       
+            "commentary_title" : post_commentary_json["original_title"],
+            "commentary_description" : post_commentary_json["original_description"],
+            "commentary_title_tl" : post_commentary_json["translated_title"],
+            "commentary_description_tl" : post_commentary_json["translated_description"],
+    #       "notes" : post_notes_json[""],
+            "rating" : rating_dict[str(post_json["rating"])],
+            "general_tag_count" : post_json["tag_count_general"],
+            "general_tag_list" : post_json["tag_string_general"],
+            "preview_file_url" : post_json["preview_file_url"],
+            "extra_comment" : mmo_extra_comment
+        }
+
+
+#        print(mmo)
+
+        data[mmo_number] = mmo
+
+        k  = list(data.items())
+        print(k[-1])
+
+#        input("For loop paused, press enter to continue")
+
+def discover_mmo_number(post_commentary_json):
+
+    title = post_commentary_json["original_title"]
+    description = post_commentary_json["original_description"]
+
+    title = unicodedata.normalize('NFKC',title)
+
+    print("Title -> " + title)
+    numbers_title = []
+    count = 0
+    temp = []
+
+    for character in title:
+        if  ( character.isdigit() or (count >= 1 and (character == "." or character == "," or character.isspace() ) ) ):
+            temp.append(character)
+            count+=1
+        elif count >= 1:
+            count = 0
+            s = ''.join(temp)
+            s.strip()
+            temp = []
+            numbers_title.append(s)
+
+        #print(character)
+
+    if count >= 1:
+        count = 0
+        s = ''.join(temp)
+        s.strip()
+        temp = []
+        numbers_title.append(s)
+    
+    
+    selector = -1
+    if(len(numbers_title) == 0) or (len(numbers_title) > 1) :
+        numbers_title.append("Something fucked up in the number")
+        print("Numbers found in the title -> " + str(numbers_title))
+        print("Length of the list of numbers in the title -> " + str(len(numbers_title)))
+
+        while int(selector) < 0 or int(selector) >= len(numbers_title):
+            print("Numbers found in the title -> " + str(numbers_title))
+            selector =  input("There's multiple numbers in the title, please choose which one should be the mmo number(index starts at 0)")
+            if (int(selector) > len(numbers_title) ) or (int(selector) < 0 ) or selector is None :
+                print("Number chosen is out of bounds")
+
+
+    print("Numbers found")
+    print(numbers_title)
+    mmo_number = numbers_title[int(selector)]
+
+    mmo_number = unicodedata.normalize('NFKC', mmo_number)
+    
+    mmo_number = mmo_number.strip()
+    print("MMO_Number" +  str(mmo_number))
+    return mmo_number
+
+def discover_upload_timestamp(twitter_source):
+
+    if( twitter_source.find("photo") >= 0):
+        print("Twitter source has photo on the URL! Twitter source -> " + twitter_source)
+        temp =  twitter_source.lower().split("https://twitter.com/strangestone/status/")
+        print("Temp before spliting the tweet id" + str(temp))
+        tweet_id =   temp[1].lower().split("/photo/1")
     else:
-#        print("No recurring character present")
-        character_string = "No recurring character present"
+        tweet_id =   twitter_source.lower().split("https://twitter.com/strangestone/status/")    
 
-    f.write (url_http + ";" + twitter_link + ";" + str(character_count) + ";" + character_string + ";" +'\n')
+    print("Tweet id list " + str(tweet_id))
 
-f.close()
+    for i in tweet_id:
+        if len(i) != 0:
+            id = i
 
+    print("Final tweet ID ->" + id)
 
+    twitter_api_url = "https://api.twitter.com/2/tweets?ids="
+    twitter_request = twitter_api_url + str(id)
+    
 
-f = open("Tawawa_output.txt", "r")
+    token_file = open("token.env","r",encoding="utf-8")
+    token = token_file.read()
+    bearer_token = "Bearer " + str(token)
 
-for line in f:
-    line_split = line.split(";")
+    params = {"tweet.fields" : "created_at"}
+    header = {'Authorization': bearer_token}
 
-    print(line_split)
+    resp_twitter = requests.get(url=twitter_request, params=params, headers=header)
+    twitter_json = resp_twitter.json()
+    
+    print("Twitter json ->")
+    print(twitter_json)
+    #print(twitter_json)
+    
+#    print(link)
 
-    if(int(line_split[2]) > 0):
-        print(line_split[3])
+    timestamp = twitter_json["data"][0]["created_at"]
+#    timestamp = link.time.datetime
+    #print(timestamp)
 
-f.close()
+    #input("Inside discover upload timestamp")
+    return timestamp
+
+def fan_extra_comment():
+
+    #input("Inside discover extra comment")
+
+    url = "https://tawawa.fandom.com/wiki/List_of_Illustrations"
+    page = requests.get(url)
+
+    soup = BeautifulSoup(page.content, "html.parser")
+
+    tables = soup.find_all("table", class_="article-table") 
+
+    print
+
+    mmo_number = 0
+    fan_description = ""
+    for table in tables:
+        for tbody in table:
+            for tr in tbody:
+#                print("Table row " + str(tr))
+#                input("Pause table row")
+                if str(tr).find("</th") > 0 :
+                    continue
+                for idx,td in enumerate(tr):                    
+#                    print("idx -> " + str(idx))
+#                    print("td -> " + str(td))
+#                    input("Pause td")
+                    if idx == 1:
+                        mmo_number = str(td.text).strip()
+                    if idx == 7:
+                        fan_description = td.text.strip()
+#                print("MMO_number in fandom -> " + str(mmo_number))
+#                print("Fan description in fandom ->" + str(fan_description))
+#                input("Pause table row 2")
+                fan_descriptions[mmo_number] = fan_description
+#                print(fan_descriptions)
+        
+#        input("Pause table")
+    
+    print(fan_descriptions)
+
+def request_pool(pool_id):
+    url_pools_api = 'https://danbooru.donmai.us/pools/'
+    url_http_request = url_pools_api + str(pool_id) + '.json'
+
+    params = dict()
+
+    resp_pool = requests.get(url=url_http_request, params=params)
+    pool_json = resp_pool.json()
+
+    return pool_json
+
+def request_post(post_id):
+    url_posts_api = 'https://danbooru.donmai.us/posts/'
+    url_http_request = url_posts_api + str(post_id) + '.json'
+
+    params = dict()
+
+    resp_post = requests.get(url=url_http_request, params=params)
+    post_json = resp_post.json()
+
+    return post_json
+
+def request_commentary(post_id):
+    url_post_commentary_api = 'https://danbooru.donmai.us/posts/'
+    url_http_request = url_post_commentary_api + str(post_id) + '/artist_commentary.json'
+    
+    params = dict()
+
+    resp_post = requests.get(url=url_http_request, params=params)
+    post_commentary_json = resp_post.json()
+
+    return post_commentary_json
+
+def main():
+
+    pool_id = 10374
+
+    pool_json = request_pool(pool_id)
+    
+    post_ids = pool_json["post_ids"]
+
+    fan_extra_comment()
+
+    populate_json(post_ids)
+
+    with open('mmo.json', 'w') as outfile:
+        json.dump(mmo_json, outfile)
+
+if __name__ == "__main__":
+    main()
