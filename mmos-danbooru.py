@@ -65,6 +65,26 @@ def populate_json(post_ids):
             mmo_number = "1"
         elif int(post_id) == 2005520:
             mmo_number = "GW SP"
+        elif int(post_id) == 2255030:
+            mmo_number = "42.5"
+        elif int(post_id) == 3683304:
+            mmo_number = "247.5"
+        elif int(post_id) == 3881766:
+            mmo_number = "270.5"
+        elif int(post_id) == 3925405:
+            mmo_number = "275.5"
+        elif int(post_id) == 4193497:
+            mmo_number = "299.5"
+        elif int(post_id) == 4361483:
+            mmo_number = "313.5"
+        elif int(post_id) == 4402872:
+            mmo_number = "316.5"
+        elif int(post_id) == 4528587:
+            mmo_number = "326.5"
+        
+        
+        
+            
         else:
             mmo_number = discover_mmo_number(post_commentary_json)
 
@@ -76,38 +96,44 @@ def populate_json(post_ids):
         temp = str(mmo_number)
         #input("Pause MMO NUMBER 1")
         print(mmo_number)
-        print("Print fan descriptions found" + fan_descriptions[temp])
-        #input("Pause MMO NUMBER 2")
-        mmo_extra_comment = fan_descriptions[temp]
 
-        mmo = {
-            "twitter_source" : post_json["source"],
-            "mmo_number" : mmo_number,
-            "twitter_source_timestamp" : mmo_upload_timestamp,
-            "danbooru_source" : "https://danbooru.donmai.us/posts/" + str(post_id),
-            "character_count" : post_json["tag_count_character"],
-            "character_list" : post_json["tag_string_character"],       
-            "commentary_title" : post_commentary_json["original_title"],
-            "commentary_description" : post_commentary_json["original_description"],
-            "commentary_title_tl" : post_commentary_json["translated_title"],
-            "commentary_description_tl" : post_commentary_json["translated_description"],
-    #       "notes" : post_notes_json[""],
-            "rating" : rating_dict[str(post_json["rating"])],
-            "general_tag_count" : post_json["tag_count_general"],
-            "general_tag_list" : post_json["tag_string_general"],
-            "preview_file_url" : post_json["preview_file_url"],
-            "extra_comment" : mmo_extra_comment
-        }
+        try:
+            print("Print fan descriptions found" + fan_descriptions[temp])
+            #input("Pause MMO NUMBER 2")
+            mmo_extra_comment = fan_descriptions[temp]
+        except KeyError:
+            print("No Fan descriptions for the MMO : " + mmo_number)
+            mmo_extra_comment = ""
+        finally:
+
+            mmo = {
+                "twitter_source" : post_json["source"],
+                "mmo_number" : mmo_number,
+                "twitter_source_timestamp" : mmo_upload_timestamp,
+                "danbooru_source" : "https://danbooru.donmai.us/posts/" + str(post_id),
+                "character_count" : post_json["tag_count_character"],
+                "character_list" : post_json["tag_string_character"],       
+                "commentary_title" : post_commentary_json["original_title"],
+                "commentary_description" : post_commentary_json["original_description"],
+                "commentary_title_tl" : post_commentary_json["translated_title"],
+                "commentary_description_tl" : post_commentary_json["translated_description"],
+        #       "notes" : post_notes_json[""],
+                "rating" : rating_dict[str(post_json["rating"])],
+                "general_tag_count" : post_json["tag_count_general"],
+                "general_tag_list" : post_json["tag_string_general"],
+                "preview_file_url" : post_json["preview_file_url"],
+                "extra_comment" : mmo_extra_comment
+            }
 
 
-#        print(mmo)
+        #   print(mmo)
 
-        data[mmo_number] = mmo
+            data[mmo_number] = mmo
 
-        k  = list(data.items())
-        print(k[-1])
+            k  = list(data.items())
+            print(k[-1])
 
-#        input("For loop paused, press enter to continue")
+        #   input("For loop paused, press enter to continue")
 
 def discover_mmo_number(post_commentary_json):
 
@@ -153,6 +179,10 @@ def discover_mmo_number(post_commentary_json):
             selector =  input("There's multiple numbers in the title, please choose which one should be the mmo number(index starts at 0)")
             if (int(selector) > len(numbers_title) ) or (int(selector) < 0 ) or selector is None :
                 print("Number chosen is out of bounds")
+            elif selector.strip() == "REDO":
+                mmo_number = input("Input the MMO number now:")
+                return mmo_number
+
 
 
     print("Numbers found")
@@ -194,21 +224,37 @@ def discover_upload_timestamp(twitter_source):
     params = {"tweet.fields" : "created_at"}
     header = {'Authorization': bearer_token}
 
-    resp_twitter = requests.get(url=twitter_request, params=params, headers=header)
-    twitter_json = resp_twitter.json()
-    
-    print("Twitter json ->")
-    print(twitter_json)
-    #print(twitter_json)
-    
-#    print(link)
+    try:
 
-    timestamp = twitter_json["data"][0]["created_at"]
-#    timestamp = link.time.datetime
-    #print(timestamp)
+        resp_twitter = requests.get(url=twitter_request, params=params, headers=header)
+        twitter_json = resp_twitter.json()
+        
+        print("Twitter json ->")
+        print(twitter_json)
+        #print(twitter_json)
+        
+    #    print(link)
 
-    #input("Inside discover upload timestamp")
-    return timestamp
+        timestamp = twitter_json["data"][0]["created_at"]
+    except KeyError:
+        temp_id = input("Something went wrong while getting the Twitter Timestamp, please input the correct id now:")
+        twitter_request = twitter_api_url + str(temp_id).strip()
+
+        resp_twitter = requests.get(url=twitter_request, params=params, headers=header)
+        twitter_json = resp_twitter.json()
+        
+        print("Twitter json ->")
+        print(twitter_json)
+        #print(twitter_json)
+        
+    #    print(link)
+        timestamp = twitter_json["data"][0]["created_at"]
+
+    #    timestamp = link.time.datetime
+        #print(timestamp)
+        #input("Inside discover upload timestamp")
+    finally:
+        return timestamp
 
 def fan_extra_comment():
 
