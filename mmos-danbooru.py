@@ -54,6 +54,7 @@ def populate_json(post_ids):
         post_json = request_post(post_id)
         post_commentary_json = request_commentary(post_id)
 
+        print("Danbooru Post ID -> " + str(post_id))
         #print("Post json")
         #print(post_json)
         #print("Post commentary json")
@@ -80,11 +81,7 @@ def populate_json(post_ids):
         elif int(post_id) == 4402872:
             mmo_number = "316.5"
         elif int(post_id) == 4528587:
-            mmo_number = "326.5"
-        
-        
-        
-            
+            mmo_number = "326.5"    
         else:
             mmo_number = discover_mmo_number(post_commentary_json)
 
@@ -97,43 +94,64 @@ def populate_json(post_ids):
         #input("Pause MMO NUMBER 1")
         print(mmo_number)
 
+        check = 0
         try:
             print("Print fan descriptions found" + fan_descriptions[temp])
             #input("Pause MMO NUMBER 2")
             mmo_extra_comment = fan_descriptions[temp]
-        except KeyError:
-            print("No Fan descriptions for the MMO : " + mmo_number)
-            mmo_extra_comment = ""
+            
+        except KeyError as e:
+            if e.args[0] == temp:
+                print("No Fan descriptions for the MMO : " + mmo_number)
+                mmo_extra_comment = ""
         finally:
 
-            mmo = {
-                "twitter_source" : post_json["source"],
-                "mmo_number" : mmo_number,
-                "twitter_source_timestamp" : mmo_upload_timestamp,
-                "danbooru_source" : "https://danbooru.donmai.us/posts/" + str(post_id),
-                "character_count" : post_json["tag_count_character"],
-                "character_list" : post_json["tag_string_character"],       
-                "commentary_title" : post_commentary_json["original_title"],
-                "commentary_description" : post_commentary_json["original_description"],
-                "commentary_title_tl" : post_commentary_json["translated_title"],
-                "commentary_description_tl" : post_commentary_json["translated_description"],
-        #       "notes" : post_notes_json[""],
-                "rating" : rating_dict[str(post_json["rating"])],
-                "general_tag_count" : post_json["tag_count_general"],
-                "general_tag_list" : post_json["tag_string_general"],
-                "preview_file_url" : post_json["preview_file_url"],
-                "extra_comment" : mmo_extra_comment
-            }
+            try:
+                mmo_commentary_title = post_commentary_json["original_title"]
+            except KeyError as e:
+                if e.args[0] == 'original_title':
+                    check = 1
+                    mmo_commentary_title = ""
+                    mmo_commentary_description = ""
+                    mmo_commentary_title_tl = ""
+                    mmo_commentary_description_tl = ""
+            finally:
+                
+                if check == 0:
+                    mmo_commentary_title = post_commentary_json["original_title"]
+                    mmo_commentary_description = post_commentary_json["original_description"]
+                    mmo_commentary_title_tl = post_commentary_json["translated_title"]
+                    mmo_commentary_description_tl = post_commentary_json["translated_description"]
+
+                mmo = {
+                    "twitter_source" : post_json["source"],
+                    "mmo_number" : mmo_number,
+                    "twitter_source_timestamp" : mmo_upload_timestamp,
+                    "danbooru_source" : "https://danbooru.donmai.us/posts/" + str(post_id),
+                    "character_count" : post_json["tag_count_character"],
+                    "character_list" : post_json["tag_string_character"],       
+                    "commentary_title" : mmo_commentary_title,
+                    "commentary_description" : mmo_commentary_description,
+                    "commentary_title_tl" : mmo_commentary_title_tl,
+                    "commentary_description_tl" : mmo_commentary_description_tl,
+            #       "notes" : post_notes_json[""],
+                    "rating" : rating_dict[str(post_json["rating"])],
+                    "general_tag_count" : post_json["tag_count_general"],
+                    "general_tag_list" : post_json["tag_string_general"],
+                    "preview_file_url" : post_json["preview_file_url"],
+                    "extra_comment" : mmo_extra_comment
+                }
 
 
-        #   print(mmo)
+            #   print(mmo)
 
-            data[mmo_number] = mmo
+                data[mmo_number] = mmo
 
-            k  = list(data.items())
-            print(k[-1])
+                k  = list(data.items())
+                print(k[-1])
 
-        #   input("For loop paused, press enter to continue")
+            #   input("For loop paused, press enter to continue")
+    return data
 
 def discover_mmo_number(post_commentary_json):
 
@@ -177,12 +195,13 @@ def discover_mmo_number(post_commentary_json):
         while int(selector) < 0 or int(selector) >= len(numbers_title):
             print("Numbers found in the title -> " + str(numbers_title))
             selector =  input("There's multiple numbers in the title, please choose which one should be the mmo number(index starts at 0)")
-            if (int(selector) > len(numbers_title) ) or (int(selector) < 0 ) or selector is None :
-                print("Number chosen is out of bounds")
-            elif selector.strip() == "REDO":
+            if selector.strip() == "100" :
                 mmo_number = input("Input the MMO number now:")
                 return mmo_number
+            elif (int(selector) > len(numbers_title) ) or (int(selector) < 0 ) or selector is None :
+                print("Number chosen is out of bounds")
 
+                
 
 
     print("Numbers found")
@@ -339,8 +358,10 @@ def main():
 
     fan_extra_comment()
 
-    populate_json(post_ids)
+    data = populate_json(post_ids)
 
+    mmo_json["data"] = data
+    
     with open('mmo.json', 'w') as outfile:
         json.dump(mmo_json, outfile)
 
