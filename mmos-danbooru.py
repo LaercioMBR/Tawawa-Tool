@@ -48,13 +48,13 @@ def populate_json(post_ids):
     #LOOPING THROUGH THE POST_IDS
 
     data = {}
-
+    twitter_posts_id = {}
     for post_id in post_ids:
 
         post_json = request_post(post_id)
         post_commentary_json = request_commentary(post_id)
 
-        print("Danbooru Post ID -> " + str(post_id))
+#        print("Danbooru Post ID -> " + str(post_id))
         #print("Post json")
         #print(post_json)
         #print("Post commentary json")
@@ -66,8 +66,18 @@ def populate_json(post_ids):
             mmo_number = "1"
         elif int(post_id) == 2005520:
             mmo_number = "GW SP"
+        elif int(post_id) == 2187905:
+            mmo_number = "40"
+        elif int(post_id) == 2195135:
+            mmo_number = "41"            
         elif int(post_id) == 2255030:
             mmo_number = "42.5"
+        elif int(post_id) == 2302813:
+            mmo_number = "56"
+        elif int(post_id) == 2899696:
+            mmo_number = "140"
+        elif int(post_id) == 3643258:
+            mmo_number = "241"
         elif int(post_id) == 3683304:
             mmo_number = "247.5"
         elif int(post_id) == 3881766:
@@ -80,29 +90,37 @@ def populate_json(post_ids):
             mmo_number = "313.5"
         elif int(post_id) == 4402872:
             mmo_number = "316.5"
+        elif int(post_id) == 4474821:
+            mmo_number = "322"
         elif int(post_id) == 4528587:
-            mmo_number = "326.5"    
+            mmo_number = "326.5"
+        elif int(post_id) == 4647416:
+            mmo_number = "335"
+        elif int(post_id) == 4866673:
+            mmo_number = "349"
+        
         else:
             mmo_number = discover_mmo_number(post_commentary_json)
 
-        print("MMO NUmber -> ")
-        print(mmo_number)
-        print("Length of mmo number -> " + str(len(mmo_number)) + "| Type of mmo_number -> " + str(type(mmo_number) ))
-        mmo_upload_timestamp = discover_upload_timestamp(post_json["source"])
+#        print("MMO NUmber -> ")
+#        print(mmo_number)
+#        print("Length of mmo number -> " + str(len(mmo_number)) + "| Type of mmo_number -> " + str(type(mmo_number) ))
+
+        twitter_posts_id[mmo_number] = post_json["source"]
 
         temp = str(mmo_number)
         #input("Pause MMO NUMBER 1")
-        print(mmo_number)
+        #print(mmo_number)
 
         check = 0
         try:
-            print("Print fan descriptions found" + fan_descriptions[temp])
+            #print("Print fan descriptions found" + fan_descriptions[temp])
             #input("Pause MMO NUMBER 2")
             mmo_extra_comment = fan_descriptions[temp]
             
         except KeyError as e:
             if e.args[0] == temp:
-                print("No Fan descriptions for the MMO : " + mmo_number)
+                #print("No Fan descriptions for the MMO : " + mmo_number)
                 mmo_extra_comment = ""
         finally:
 
@@ -126,8 +144,8 @@ def populate_json(post_ids):
                 mmo = {
                     "twitter_source" : post_json["source"],
                     "mmo_number" : mmo_number,
-                    "twitter_source_timestamp" : mmo_upload_timestamp,
-                    "danbooru_source" : "https://danbooru.donmai.us/posts/" + str(post_id),
+                    "twitter_source_timestamp" : 0,                    
+                    "danbooru_source" : "https://danbooru.donmai.us/posts/{post_id}",
                     "character_count" : post_json["tag_count_character"],
                     "character_list" : post_json["tag_string_character"],       
                     "commentary_title" : mmo_commentary_title,
@@ -148,9 +166,15 @@ def populate_json(post_ids):
                 data[mmo_number] = mmo
 
                 k  = list(data.items())
-                print(k[-1])
+                #print(k[-1])
 
             #   input("For loop paused, press enter to continue")
+    
+    timestamps = discover_upload_timestamp(twitter_posts_id)
+
+    for mmo in data:
+        mmo["twitter_source_timestamp"] = timestamps[mmo["mmo_number"]]
+    
     return data
 
 def discover_mmo_number(post_commentary_json):
@@ -160,7 +184,7 @@ def discover_mmo_number(post_commentary_json):
 
     title = unicodedata.normalize('NFKC',title)
 
-    print("Title -> " + title)
+    #print("Title -> " + title)
     numbers_title = []
     count = 0
     temp = []
@@ -201,79 +225,90 @@ def discover_mmo_number(post_commentary_json):
             elif (int(selector) > len(numbers_title) ) or (int(selector) < 0 ) or selector is None :
                 print("Number chosen is out of bounds")
 
-                
-
-
-    print("Numbers found")
-    print(numbers_title)
+#    print("Numbers found")
+#    print(numbers_title)
     mmo_number = numbers_title[int(selector)]
 
     mmo_number = unicodedata.normalize('NFKC', mmo_number)
     
     mmo_number = mmo_number.strip()
-    print("MMO_Number" +  str(mmo_number))
+#    print("MMO_Number" +  str(mmo_number))
     return mmo_number
 
-def discover_upload_timestamp(twitter_source):
+def discover_upload_timestamp(twitter_source_list):
 
-    if( twitter_source.find("photo") >= 0):
-        print("Twitter source has photo on the URL! Twitter source -> " + twitter_source)
-        temp =  twitter_source.lower().split("https://twitter.com/strangestone/status/")
-        print("Temp before spliting the tweet id" + str(temp))
-        tweet_id =   temp[1].lower().split("/photo/1")
-    else:
-        tweet_id =   twitter_source.lower().split("https://twitter.com/strangestone/status/")    
+    print(twitter_source_list)
+    input("Twitter sources list above")
+    twitter_timestamps_json = {"items" : [] }
+    id_list = []
+    count = 0
+    for key, value in twitter_source_list.items():
+        if( value.find("photo") >= 0):
+            print("Twitter source has photo on the URL! Twitter source value -> " + str(value))
+            temp =  value.lower().split("https://twitter.com/strangestone/status/")
+            print("Temp before spliting the tweet id" + str(temp))
+            tweet_id =   temp[1].lower().split("/photo/1")
+        else:
+            tweet_id =   value.lower().split("https://twitter.com/strangestone/status/")    
 
-    print("Tweet id list " + str(tweet_id))
+        print("Tweet id list " + str(tweet_id))
 
-    for i in tweet_id:
-        if len(i) != 0:
-            id = i
+        for i in tweet_id:
+            if len(i) != 0:
+                id = i
+        print("Final tweet ID -> {id} ")
 
-    print("Final tweet ID ->" + id)
+        if ((count + 1) % 100 == 0):
+            count=0
+            twitter_api_url = "https://api.twitter.com/2/tweets?ids="
 
-    twitter_api_url = "https://api.twitter.com/2/tweets?ids="
-    twitter_request = twitter_api_url + str(id)
-    
+            string_ids = ""
+            for id in id_list:
+                string_ids = string_ids + str(id)+ ","
 
-    token_file = open("token.env","r",encoding="utf-8")
-    token = token_file.read()
-    bearer_token = "Bearer " + str(token)
+            string_ids = string_ids[:-1]
 
-    params = {"tweet.fields" : "created_at"}
-    header = {'Authorization': bearer_token}
+            twitter_request = twitter_api_url + string_ids
+            
+            token_file = open("token.env","r",encoding="utf-8")
+            token = token_file.read()
+            bearer_token = "Bearer " + str(token)
 
-    try:
+            params = {"tweet.fields" : "created_at"}
+            header = {'Authorization': bearer_token}
 
-        resp_twitter = requests.get(url=twitter_request, params=params, headers=header)
-        twitter_json = resp_twitter.json()
-        
-        print("Twitter json ->")
-        print(twitter_json)
-        #print(twitter_json)
-        
-    #    print(link)
+            try:
+                resp_twitter = requests.get(url=twitter_request, params=params, headers=header)
+                twitter_json = resp_twitter.json()
+                
+                print("Twitter json ->")
+                print(twitter_json)
+                #print(twitter_json)
+                
+            #    print(link)
 
-        timestamp = twitter_json["data"][0]["created_at"]
-    except KeyError:
-        temp_id = input("Something went wrong while getting the Twitter Timestamp, please input the correct id now:")
-        twitter_request = twitter_api_url + str(temp_id).strip()
+                timestamp = twitter_json["data"][0]["created_at"]
+            except Exception:
+                temp_id = input("Something went wrong while getting the Twitter Timestamp, please input the correct id now:")
+                twitter_request = twitter_api_url + str(temp_id).strip()
 
-        resp_twitter = requests.get(url=twitter_request, params=params, headers=header)
-        twitter_json = resp_twitter.json()
-        
-        print("Twitter json ->")
-        print(twitter_json)
-        #print(twitter_json)
-        
-    #    print(link)
-        timestamp = twitter_json["data"][0]["created_at"]
+                resp_twitter = requests.get(url=twitter_request, params=params, headers=header)
+                twitter_json = resp_twitter.json()
+                
+                print("Twitter json ->")
+                print(twitter_json)
+                #print(twitter_json)
+                
+            #    print(link)
+                timestamp = twitter_json["data"][0]["created_at"]
 
-    #    timestamp = link.time.datetime
-        #print(timestamp)
-        #input("Inside discover upload timestamp")
-    finally:
-        return timestamp
+            #    timestamp = link.time.datetime
+                #print(timestamp)
+                #input("Inside discover upload timestamp")
+            finally:
+                twitter_timestamps_json["items"].append(twitter_json)
+        count = count + 1 
+    return twitter_timestamps_json
 
 def fan_extra_comment():
 
@@ -286,7 +321,7 @@ def fan_extra_comment():
 
     tables = soup.find_all("table", class_="article-table") 
 
-    print
+    #print
 
     mmo_number = 0
     fan_description = ""
