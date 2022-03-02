@@ -30,8 +30,9 @@ mmo_json = {
         "Preview file url" : "string", #Danbooru or Twitter, whichever is free to use lol
         "Extra Comment" : "string", #From fandom initially, but it isn't complete and will require revision and new input for the ~150 MMOs that are empty.
     },
-    "data" : {
-    }
+    "data" : [
+
+    ]
 }
 
 rating_dict = {
@@ -144,8 +145,8 @@ def populate_json(post_ids):
                 mmo = {
                     "twitter_source" : post_json["source"],
                     "mmo_number" : mmo_number,
-                    "twitter_source_timestamp" : 0,                    
-                    "danbooru_source" : "https://danbooru.donmai.us/posts/{post_id}",
+                    "twitter_source_timestamp" : '',                    
+                    "danbooru_source" : "https://danbooru.donmai.us/posts/" + str(post_id),
                     "character_count" : post_json["tag_count_character"],
                     "character_list" : post_json["tag_string_character"],       
                     "commentary_title" : mmo_commentary_title,
@@ -163,7 +164,7 @@ def populate_json(post_ids):
 
             #   print(mmo)
 
-                data[mmo_number] = mmo
+                data = mmo
 
                 k  = list(data.items())
                 #print(k[-1])
@@ -171,9 +172,15 @@ def populate_json(post_ids):
             #   input("For loop paused, press enter to continue")
     
     timestamps = discover_upload_timestamp(twitter_posts_id)
-
-    for mmo in data:
-        mmo["twitter_source_timestamp"] = timestamps[mmo["mmo_number"]]
+    
+    print(timestamps)
+    print("Timestamps above")
+#    input("Pause timestamps")
+    temp = 0
+    for key, mmo in data.items():
+        timestamp = timestamps[temp]
+        mmo["twitter_source_timestamp"] = timestamp
+        temp = temp + 1 
     
     return data
 
@@ -238,11 +245,13 @@ def discover_mmo_number(post_commentary_json):
 def discover_upload_timestamp(twitter_source_list):
 
     print(twitter_source_list)
-    input("Twitter sources list above")
-    twitter_timestamps_json = {"items" : [] }
+#    input("Twitter sources list above")
+    twitter_timestamps_json = []
     id_list = []
     count = 0
+    total = 1
     for key, value in twitter_source_list.items():
+        
         if( value.find("photo") >= 0):
             print("Twitter source has photo on the URL! Twitter source value -> " + str(value))
             temp =  value.lower().split("https://twitter.com/strangestone/status/")
@@ -256,17 +265,28 @@ def discover_upload_timestamp(twitter_source_list):
         for i in tweet_id:
             if len(i) != 0:
                 id = i
+
+        print(id)
+        id_list.append(id)
         print("Final tweet ID -> {id} ")
 
-        if ((count + 1) % 100 == 0):
+        if (((count + 1) % 100 ) == 0) or (total == len(twitter_source_list)):
             count=0
             twitter_api_url = "https://api.twitter.com/2/tweets?ids="
+
+            print(id_list)
+            print("Id list above")
+#            input("Pause id List")
 
             string_ids = ""
             for id in id_list:
                 string_ids = string_ids + str(id)+ ","
 
             string_ids = string_ids[:-1]
+
+            print(string_ids)
+            print("Id string above")
+#            input("Pause id List")
 
             twitter_request = twitter_api_url + string_ids
             
@@ -285,9 +305,6 @@ def discover_upload_timestamp(twitter_source_list):
                 print(twitter_json)
                 #print(twitter_json)
                 
-            #    print(link)
-
-                timestamp = twitter_json["data"][0]["created_at"]
             except Exception:
                 temp_id = input("Something went wrong while getting the Twitter Timestamp, please input the correct id now:")
                 twitter_request = twitter_api_url + str(temp_id).strip()
@@ -297,7 +314,6 @@ def discover_upload_timestamp(twitter_source_list):
                 
                 print("Twitter json ->")
                 print(twitter_json)
-                #print(twitter_json)
                 
             #    print(link)
                 timestamp = twitter_json["data"][0]["created_at"]
@@ -306,8 +322,16 @@ def discover_upload_timestamp(twitter_source_list):
                 #print(timestamp)
                 #input("Inside discover upload timestamp")
             finally:
-                twitter_timestamps_json["items"].append(twitter_json)
+                                              
+                for item in twitter_json["data"]:
+                    print(item)
+                    time = item["created_at"]
+                    twitter_timestamps_json.append(time)
+
+
+                id_list = []
         count = count + 1 
+        total = total + 1
     return twitter_timestamps_json
 
 def fan_extra_comment():
