@@ -11,38 +11,67 @@
     </head>
     <body>
 
+        <template id="mmo_template">
+            <div id="div_mmo_template">
+                <div id="div_mmo_image_template" style="float: left;">
+                    <img id="img_mmo_template" src="${data.preview_file_url}" class="img-fluid img-thumbnail">
+                    <p id="p_mmo_template">Monday Morning Offer # ${data.mmo_number}</p>
+                </div>
+
+                <div id="div_mmo_info_template" style="float: left;">
+                    <table id ="table_mmo_info_template" class="table table-dark table-bordered table-hover table-striped">
+                        <tbody id="tbody_mmo_info_template">
+                            <tr>
+                                <td>
+                                    Twitter Source
+                                </td>
+                                <td>
+                                    <a href="${data.twitter_source}">${data.twitter_source}</a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    Twitter Source Timestamp
+                                </td>
+                                <td onload="localtime(this)">
+                                    ${data.twitter_source_timestamp}<time datetime="${data.twitter_source_timestamp}">
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    Characters
+                                </td>
+                                <td>
+                                    <p>${data.character_list}</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>    
+                </div>    
+            </div>
+        </template>
+
         <div id="navbar">
     
         </div>
     
-        <div id="content">
-            <div id="search_bar">
-                <div class="input-group" style="position:sticky; top:0;">
-
-
-                    <select class="form-select" aria-label="Default select example">
-                        <option selected>Open this select menu</option>
-                        <option value="1">One</option>
-                        <option value="2">Two</option>
-                        <option value="3">Three</option>
-                    </select>
-
-                    <input type="text" aria-label="Data" class="form-control">
-                </div>
+        <div id="content" style="display:grid ; grid-template-columns: auto auto">
+            <div>
+                <form>
+                    <label for="fname">First name:</label><br>
+                    <input type="text" id="fname" name="fname"><br>
+                    <label for="lname">Last name:</label><br>
+                    <input type="text" id="lname" name="lname">
+                </form> 
+                
             </div>
-            <div class="table-responsive" style="overflow:visible">
-                <table id = "mmo_table" class="table table-dark table-bordered table-hover table-striped">
-                    <thead id="mmo_table_thead" style="position:sticky; top:0;">
-                        <tr id="mmo_table_thead_tr">
-
-                        </tr>
-                    </thead>
-                    <tbody id="mmo_table_tbody">
-    
-                    </tbody>
-                </table>    
+            
+            <div>
+                <button>
+                    Teste
+                </button>
             </div>
-        </div>
+
         <!-- Optional JavaScript -->
         <!-- jQuery first, then Popper.js, then Bootstrap JS -->
         <script src="https://www.w3schools.com/lib/w3data.js"></script>
