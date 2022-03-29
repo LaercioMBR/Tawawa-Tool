@@ -1,7 +1,26 @@
-function localtime(){
-    let element = this
+function loadSlider(maxNumberItems){
+    
+    let slider = document.getElementById('slider');
+    
+    noUiSlider.create(slider, {
+        connect: true,
+        start: [0,1000],
+        range: {
+            'min': 0,
+            'max': maxNumberItems,
+        },
+        step: 1,
+        behaviour: 'tap-drag',
+        tooltips: true,
+    
+    });
 
-    alert(this.href)
+}
+
+function localtime(){
+    let currentDate = Date();
+
+    alert(currentDate);
 }
 
 function loadTemplate(template_id, data) {
@@ -14,6 +33,7 @@ function load_mmo(json) {
     
     let html = "";
 
+    loadSlider(json.data.length);
     data.forEach(function(value,key){
         html += loadTemplate("mmo_template", data[key]);
     });    

@@ -1,88 +1,192 @@
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        <!-- Bootstrap CSS -->
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
-        
-        <title>Tawawa Tool - MMO Data</title>
-    </head>
-    <body>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        <template id="mmo_template">
-            <div id="div_mmo_template">
-                <div id="div_mmo_image_template" style="float: left;">
-                    <img id="img_mmo_template" src="${data.preview_file_url}" class="img-fluid img-thumbnail">
-                    <p id="p_mmo_template">Monday Morning Offer # ${data.mmo_number}</p>
-                </div>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+    <link href="../nouislider.css" rel="stylesheet">
 
-                <div id="div_mmo_info_template" style="float: left;">
-                    <table id ="table_mmo_info_template" class="table table-dark table-bordered table-hover table-striped">
-                        <tbody id="tbody_mmo_info_template">
-                            <tr>
-                                <td>
-                                    Twitter Source
-                                </td>
-                                <td>
-                                    <a href="${data.twitter_source}">${data.twitter_source}</a>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    Twitter Source Timestamp
-                                </td>
-                                <td onload="localtime(this)">
-                                    ${data.twitter_source_timestamp}<time datetime="${data.twitter_source_timestamp}">
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    Characters
-                                </td>
-                                <td>
-                                    <p>${data.character_list}</p>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>    
-                </div>    
+    <title>Tawawa Tool - MMO Data</title>
+</head>
+
+<body>
+
+    <template id="mmo_template">
+        <div id="div_mmo_template" style="display: grid; grid-template-columns: auto auto;">
+            <div id="div_mmo_image_template" style="vertical-align: middle;">
+                <img id="img_mmo_template" src="${data.preview_file_url}" class="img-fluid img-thumbnail">
+                <p id="p_mmo_template">Monday Morning Offer # ${data.mmo_number}</p>
             </div>
-        </template>
 
-        <div id="navbar">
-    
+            <div id="div_mmo_info_template">
+                <table id="table_mmo_info_template" class="table table-dark table-bordered table-hover table-striped">
+                    <tbody id="tbody_mmo_info_template">
+                        <tr>
+                            <td>
+                                Twitter Source
+                            </td>
+                            <td>
+                                <a href="${data.twitter_source}">${data.twitter_source}</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Danbooru Source
+                            </td>
+                            <td>
+                                <a href="${data.danbooru_source}">${data.danbooru_source}</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Twitter Source Timestamp
+                            </td>
+                            <td onload="localtime(this)">
+                                ${data.twitter_source_timestamp}<time datetime="${data.twitter_source_timestamp}">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Characters
+                            </td>
+                            <td>
+                                <p>${data.character_list}</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Character Count
+                            </td>
+                            <td>
+                                <p>${data.character_count}</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Title JP
+                            </td>
+                            <td>
+                                <p>${data.commentary_title}</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Author's Comments JP
+                            </td>
+                            <td>
+                                <p>${data.commentary_description}</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Title EN
+                            </td>
+                            <td>
+                                <p>${data.commentary_title_tl}</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Author's Comments EN
+                            </td>
+                            <td>
+                                <p>${data.commentary_description_tl}</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Rating
+                            </td>
+                            <td>
+                                <p>${data.rating}</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Content Tags
+                            </td>
+                            <td>
+                                <p>${data.general_tag_list}</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Content Tags Count
+                            </td>
+                            <td>
+                                <p>${data.general_tag_count}</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Fan Comment
+                            </td>
+                            <td>
+                                <p>${data.extra_comment}</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
+    </template>
+
+    <div id="navbar">
+
+    </div>
+
+
+    <div id="div_mmo_form" style="margin-top : 2rem;">
+        <div class="row g-2">
+            <div class="col-md">
+                <div class="form-floating">
+                    <label for="floatingInputGrid">Please input the range of MMOs to search through</label>
+                </div>                
+                <div id="slider">
+                </div>
+                <div class="form-floating">
+                    <input type="email" class="form-control" id="floatingInputGrid" placeholder="name@example.com"
+                        value="mdo@example.com">
+                    <label for="floatingInputGrid">Email address</label>
+                </div>
+                <div class="form-floating">
+                    <select class="form-select" id="floatingSelectGrid" aria-label="Floating label select example">
+                        <option selected>Open this select menu</option>
+                        <option value="1">One</option>
+                        <option value="2">Two</option>
+                        <option value="3">Three</option>
+                    </select>
+                    <label for="floatingSelectGrid">Works with selects</label>
+                </div>
+            </div>
+            <div class="col-md">
+            </div>
+        </div>
+    </div>
+
+
+    <div id="content" style="display:grid ; grid-template-columns: auto">
+
+    </div>
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://www.w3schools.com/lib/w3data.js"></script>
+    <script src="../jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+        crossorigin="anonymous"></script>
+    <script src="https://www.w3schools.com/lib/w3.js"></script>
     
-        <div id="content" style="display:grid ; grid-template-columns: auto auto">
-            <div>
-                <form>
-                    <label for="fname">First name:</label><br>
-                    <input type="text" id="fname" name="fname"><br>
-                    <label for="lname">Last name:</label><br>
-                    <input type="text" id="lname" name="lname">
-                </form> 
-                
-            </div>
-            
-            <div>
-                <button>
-                    Teste
-                </button>
-            </div>
+    <script>
+        $("#navbar").load('../navbar/navbar.html');
+        </script>
+    <script src="../nouislider.min.js"></script>
+    <script src="mmos.js"></script>
+</body>
 
-        <!-- Optional JavaScript -->
-        <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-        <script src="https://www.w3schools.com/lib/w3data.js"></script>
-        <script src="../jquery-3.6.0.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>  
-        <script src="https://www.w3schools.com/lib/w3.js"></script> 
-        <script src="mmos.js"></script>
-        
-        <script>
-            $("#navbar").load('../navbar/navbar.html');
-        </script>        
-    </body>
 </html>
-
