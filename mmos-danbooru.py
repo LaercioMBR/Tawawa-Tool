@@ -1,4 +1,4 @@
-from numpy import diff
+from numpy import diff, number
 import requests
 import json
 import unicodedata
@@ -10,6 +10,7 @@ from requests import get
 
 import time
 import re
+import os
 
 mmo_json = {
     "meta" :  {
@@ -27,12 +28,24 @@ mmo_json = {
         "Rating" : "string",
         "Number of General Content Tags" : "number",
         "General Content Tags" : "string",
+        "Number of Copyright Tags" : "number",
+        "Copyright Tags" : "string",
         "Preview file url" : "string", #Danbooru or Twitter, whichever is free to use lol
         "Extra Comment" : "string", #From fandom initially, but it isn't complete and will require revision and new input for the ~150 MMOs that are empty.
     },
     "data" : [
 
+    ],
+    "unique_character_list" : [
+
+    ],
+    "unique_copyright_list" : [
+
+    ],
+    "unique_tag_list" : [
+
     ]
+
 }
 
 rating_dict = {
@@ -43,23 +56,361 @@ rating_dict = {
 
 fan_descriptions = {}
 
-
-def populate_json(post_ids):
+def populate_mmo_json(post_ids):
 
     #LOOPING THROUGH THE POST_IDS
 
     data = {}
     twitter_posts_id = {}
+
     for post_id in post_ids:
 
         post_json = request_post(post_id)
+
         post_commentary_json = request_commentary(post_id)
 
-#        print("Danbooru Post ID -> " + str(post_id))
+        mmo_number = discover_mmo_number(post_id, post_commentary_json)        
+        
+        mmo = populate_mmo_info(mmo_number, post_json, post_commentary_json)
+
+        mmo = populate_unique_character_json(mmo , post_json)
+
+        mmo = populate_unique_copyright_json(mmo , post_json)
+
+        mmo = populate_unique_tag_json(mmo , post_json)
+
+        twitter_posts_id[mmo_number] = post_json["source"]
+
+        data[mmo_number] = mmo
+    
+    
+    data = populate_timestamp_info_mmo(data, twitter_posts_id)
+    
+    return data
+
+def populate_timestamp_info_mmo(data , twitter_posts_id):
+    timestamps = discover_upload_timestamp(twitter_posts_id)
+    
+    print(timestamps)
+    print("Timestamps above")
+#    input("Pause timestamps")
+    temp = 0
+    for key, mmo in data.items():
+        timestamp = timestamps[temp]
+        mmo["twitter_source_timestamp"] = timestamp
+        temp = temp + 1
+
+        data[key] = mmo
+
+        print(data[key])
+        input()
+    return data
+
+def populate_mmo_info(mmo_number , post_json, post_commentary_json):
+
+    post_id = post_json["id"]
+#       print("Danbooru Post ID -> " + str(post_id))
         #print("Post json")
         #print(post_json)
         #print("Post commentary json")
         #print(post_commentary_json)
+#        print("MMO NUmber -> ")
+#        print(mmo_number)
+#        print("Length of mmo number -> " + str(len(mmo_number)) + "| Type of mmo_number -> " + str(type(mmo_number) ))
+
+        #input("Pause MMO NUMBER 1")
+        #print(mmo_number)
+
+    check = 0
+
+#    print(mmo_number)
+#    print(post_json)
+#    print(post_commentary_json)
+#    input()
+    print(mmo_number)
+    mmo_extra_comment = ""
+    try:
+        #print("Print fan descriptions found" + fan_descriptions[temp])
+        #input("Pause MMO NUMBER 2")
+        mmo_extra_comment = fan_descriptions[mmo_number]
+            
+    except KeyError as e:
+        print(e)
+        if e.args[0] == None:
+            #print("No Fan descriptions for the MMO : " + mmo_number)
+            mmo_extra_comment = ""
+    finally:
+
+        try:
+            mmo_commentary_title = post_commentary_json["original_title"]
+        except KeyError as e:
+            if e.args[0] == 'original_title':
+                check = 1
+                mmo_commentary_title = ""
+                mmo_commentary_description = ""
+                mmo_commentary_title_tl = ""
+                mmo_commentary_description_tl = ""
+        finally:
+                
+            if check == 0:
+                mmo_commentary_title = post_commentary_json["original_title"]
+                mmo_commentary_description = post_commentary_json["original_description"]
+                mmo_commentary_title_tl = post_commentary_json["translated_title"]
+                mmo_commentary_description_tl = post_commentary_json["translated_description"]
+
+            mmo_character_string = post_json["tag_string_character"]
+            mmo_character_count = post_json["tag_count_character"]
+
+
+            mmo = {
+                "twitter_source" : post_json["source"],
+                "mmo_number" : mmo_number,
+                "twitter_source_timestamp" : '',                    
+                "danbooru_source" : "https://danbooru.donmai.us/posts/" + str(post_id),
+                "character_count" : mmo_character_count,
+                "character_list" : mmo_character_string,       
+                "commentary_title" : mmo_commentary_title,
+                "commentary_description" : mmo_commentary_description,
+                "commentary_title_tl" : mmo_commentary_title_tl,
+                "commentary_description_tl" : mmo_commentary_description_tl,
+        #       "notes" : post_notes_json[""],
+                "rating" : rating_dict[str(post_json["rating"])],
+                "general_tag_count" : post_json["tag_count_general"],
+                "general_tag_list" : post_json["tag_string_general"],
+                "copyright_list" : post_json["tag_string_copyright"],
+                "copyright_list_count" : post_json["tag_count_copyright"],
+                "preview_file_url" : post_json["preview_file_url"],
+                "extra_comment" : mmo_extra_comment
+            }
+
+            #   print(mmo)
+
+            return mmo
+
+            #k  = list(data.items())
+            #print(k[-1])
+
+            #   input("For loop paused, press enter to continue")
+
+
+def populate_unique_character_json(mmo, post_json):
+
+    mmo_character_string = mmo["character_list"]
+
+    mmo_character_list = mmo_character_string.split(" ")
+
+#    print("MMO character list")
+#    print(mmo_character_list)
+    
+    dict_prevent_infinite = {}
+    dict_all_characters = {}
+
+    for character in mmo_json["unique_character_list"]:
+        dict_all_characters[character["character_name"]] = 1
+
+    for character in mmo_character_list :
+
+#        print("character")
+#        print(character)
+        
+
+        # Check if the final list is empty, if it is, add the first character to the list if it exists
+        if len(mmo_json["unique_character_list"]) == 0 and len(character) > 0 :
+            unique_character = { 
+                "character_name" : character , 
+                "mmo_appearance_count" : 1,
+                "mmo_number_appearances" : [mmo["mmo_number"]]
+            }
+
+            mmo_json["unique_character_list"].append(unique_character)
+
+            dict_prevent_infinite[character] = 1
+        elif character:
+            count = 0
+
+
+            for character_json in mmo_json["unique_character_list"]:
+#                print("CHaracter json")
+#                print(character_json)
+#                print("count  " + str(count))
+#                print("mmo nmumber :  " + str(mmo["mmo_number"]))
+
+                if character not in dict_prevent_infinite: 
+
+                    if character == character_json["character_name"]: 
+
+                        mmo_json["unique_character_list"][count]["mmo_appearance_count"] += 1
+                        
+                        mmo_json["unique_character_list"][count]["mmo_number_appearances"].append(mmo["mmo_number"])
+
+                        dict_prevent_infinite[character] = 1
+                    elif character not in dict_all_characters:
+
+                        unique_character = { 
+                            "character_name" : character , 
+                            "mmo_appearance_count" : 1,
+                            "mmo_number_appearances" : [mmo["mmo_number"]]
+                        }
+
+                        mmo_json["unique_character_list"].append(unique_character)
+
+                        dict_prevent_infinite[character] = 1
+                    
+                count += 1
+
+#    print("mmo_json_unique_character_list")
+#    print(mmo_json["unique_character_list"])
+#    input()
+    return mmo
+
+def populate_unique_copyright_json(mmo, post_json):
+
+    mmo_copyright_string = post_json["tag_string_copyright"]
+
+    mmo_copyright_list = mmo_copyright_string.split(" ")
+
+#    print("MMO character list")
+#    print(mmo_character_list)
+    
+    dict_prevent_infinite = {}
+    dict_all_copyright = {}
+
+    for copyright in mmo_json["unique_copyright_list"]:
+        dict_all_copyright[copyright["copyright_name"]] = 1
+
+    for copyright in mmo_copyright_list :
+
+#        print("character")
+#        print(character)
+        
+
+        # Check if the final list is empty, if it is, add the first character to the list if it exists
+        if len(mmo_json["unique_copyright_list"]) == 0 and len(copyright) > 0 :
+            unique_copyright = { 
+                "copyright_name" : copyright , 
+                "mmo_appearance_count" : 1,
+                "mmo_number_appearances" : [mmo["mmo_number"]]
+            }
+
+            mmo_json["unique_copyright_list"].append(unique_copyright)
+
+            dict_prevent_infinite[copyright] = 1
+        elif copyright:
+            count = 0
+
+            for copyright_json in mmo_json["unique_copyright_list"]:
+#                print("CHaracter json")
+#                print(character_json)
+#                print("count  " + str(count))
+                #print("mmo nmumber :  " + str(mmo["mmo_number"]))
+
+                if copyright not in dict_prevent_infinite: 
+
+                    if copyright == copyright_json["copyright_name"]: 
+
+                        mmo_json["unique_copyright_list"][count]["mmo_appearance_count"] += 1
+                        
+                        mmo_json["unique_copyright_list"][count]["mmo_number_appearances"].append(mmo["mmo_number"])
+
+                        dict_prevent_infinite[copyright] = 1
+                    elif copyright not in dict_all_copyright:
+
+                        unique_copyright = { 
+                            "copyright_name" : copyright , 
+                            "mmo_appearance_count" : 1,
+                            "mmo_number_appearances" : [mmo["mmo_number"]]
+                        }
+
+                        mmo_json["unique_copyright_list"].append(unique_copyright)
+
+                        dict_prevent_infinite[copyright] = 1
+                    
+                count += 1
+
+#    print("mmo_json_unique_character_list")
+#    print(mmo_json["unique_character_list"])
+#    input()
+    return mmo
+
+def populate_unique_tag_json(mmo, post_json):
+
+    mmo_tag_string = post_json["tag_string_general"]
+
+    mmo_tag_list = mmo_tag_string.split(" ")
+
+#    print("MMO character list")
+#    print(mmo_character_list)
+    
+    dict_prevent_infinite = {}
+    dict_all_tag = {}
+
+    for tag in mmo_json["unique_tag_list"]:
+        dict_all_tag[tag["tag_name"]] = 1
+
+    for tag in mmo_tag_list :
+
+#        print("character")
+#        print(character)
+        
+
+        # Check if the final list is empty, if it is, add the first character to the list if it exists
+        if len(mmo_json["unique_tag_list"]) == 0 and len(tag) > 0 :
+            unique_tag = { 
+                "tag_name" : tag , 
+                "mmo_appearance_count" : 1,
+                "mmo_number_appearances" : [mmo["mmo_number"]]
+            }
+
+            mmo_json["unique_tag_list"].append(unique_tag)
+
+            dict_prevent_infinite[tag] = 1
+        elif tag:
+            count = 0
+
+            for tag_json in mmo_json["unique_tag_list"]:
+#                print("CHaracter json")
+#                print(character_json)
+#                print("count  " + str(count))
+                #print("mmo nmumber :  " + str(mmo["mmo_number"]))
+
+                if tag not in dict_prevent_infinite: 
+
+                    if tag == tag_json["tag_name"]: 
+
+                        mmo_json["unique_tag_list"][count]["mmo_appearance_count"] += 1
+                        
+                        mmo_json["unique_tag_list"][count]["mmo_number_appearances"].append(mmo["mmo_number"])
+
+                        dict_prevent_infinite[tag] = 1
+                    elif tag not in dict_all_tag:
+
+                        unique_tag = { 
+                            "tag_name" : tag , 
+                            "mmo_appearance_count" : 1,
+                            "mmo_number_appearances" : [mmo["mmo_number"]]
+                        }
+
+                        mmo_json["unique_tag_list"].append(unique_tag)
+
+                        dict_prevent_infinite[tag] = 1
+                    
+                count += 1
+
+#    print("mmo_json_unique_character_list")
+#    print(mmo_json["unique_character_list"])
+#    input()
+    return mmo
+
+
+def discover_mmo_number(post_id , post_commentary_json):
+
+    try:
+        post_id = post_commentary_json["post_id"]
+    except KeyError as e:
+        print("Error because no artist commentary on the post")
+        post_id = post_id
+
+    finally:
 
         mmo_number = 0
 
@@ -100,147 +451,64 @@ def populate_json(post_ids):
         elif int(post_id) == 4866673:
             mmo_number = "349"
         
-        else:
-            mmo_number = discover_mmo_number(post_commentary_json)
+        elif mmo_number == 0:
 
-#        print("MMO NUmber -> ")
-#        print(mmo_number)
-#        print("Length of mmo number -> " + str(len(mmo_number)) + "| Type of mmo_number -> " + str(type(mmo_number) ))
+            title = post_commentary_json["original_title"]
+            description = post_commentary_json["original_description"]
 
-        twitter_posts_id[mmo_number] = post_json["source"]
+            title = unicodedata.normalize('NFKC',title)
 
-        temp = str(mmo_number)
-        #input("Pause MMO NUMBER 1")
-        #print(mmo_number)
-
-        check = 0
-        try:
-            #print("Print fan descriptions found" + fan_descriptions[temp])
-            #input("Pause MMO NUMBER 2")
-            mmo_extra_comment = fan_descriptions[temp]
-            
-        except KeyError as e:
-            if e.args[0] == temp:
-                #print("No Fan descriptions for the MMO : " + mmo_number)
-                mmo_extra_comment = ""
-        finally:
-
-            try:
-                mmo_commentary_title = post_commentary_json["original_title"]
-            except KeyError as e:
-                if e.args[0] == 'original_title':
-                    check = 1
-                    mmo_commentary_title = ""
-                    mmo_commentary_description = ""
-                    mmo_commentary_title_tl = ""
-                    mmo_commentary_description_tl = ""
-            finally:
-                
-                if check == 0:
-                    mmo_commentary_title = post_commentary_json["original_title"]
-                    mmo_commentary_description = post_commentary_json["original_description"]
-                    mmo_commentary_title_tl = post_commentary_json["translated_title"]
-                    mmo_commentary_description_tl = post_commentary_json["translated_description"]
-
-                mmo = {
-                    "twitter_source" : post_json["source"],
-                    "mmo_number" : mmo_number,
-                    "twitter_source_timestamp" : '',                    
-                    "danbooru_source" : "https://danbooru.donmai.us/posts/" + str(post_id),
-                    "character_count" : post_json["tag_count_character"],
-                    "character_list" : post_json["tag_string_character"],       
-                    "commentary_title" : mmo_commentary_title,
-                    "commentary_description" : mmo_commentary_description,
-                    "commentary_title_tl" : mmo_commentary_title_tl,
-                    "commentary_description_tl" : mmo_commentary_description_tl,
-            #       "notes" : post_notes_json[""],
-                    "rating" : rating_dict[str(post_json["rating"])],
-                    "general_tag_count" : post_json["tag_count_general"],
-                    "general_tag_list" : post_json["tag_string_general"],
-                    "preview_file_url" : post_json["preview_file_url"],
-                    "extra_comment" : mmo_extra_comment
-                }
-
-
-            #   print(mmo)
-
-                data = mmo
-
-                k  = list(data.items())
-                #print(k[-1])
-
-            #   input("For loop paused, press enter to continue")
-    
-    timestamps = discover_upload_timestamp(twitter_posts_id)
-    
-    print(timestamps)
-    print("Timestamps above")
-#    input("Pause timestamps")
-    temp = 0
-    for key, mmo in data.items():
-        timestamp = timestamps[temp]
-        mmo["twitter_source_timestamp"] = timestamp
-        temp = temp + 1 
-    
-    return data
-
-def discover_mmo_number(post_commentary_json):
-
-    title = post_commentary_json["original_title"]
-    description = post_commentary_json["original_description"]
-
-    title = unicodedata.normalize('NFKC',title)
-
-    #print("Title -> " + title)
-    numbers_title = []
-    count = 0
-    temp = []
-
-    for character in title:
-        if  ( character.isdigit() or (count >= 1 and (character == "." or character == "," or character.isspace() ) ) ):
-            temp.append(character)
-            count+=1
-        elif count >= 1:
+            #print("Title -> " + title)
+            numbers_title = []
             count = 0
-            s = ''.join(temp)
-            s.strip()
             temp = []
-            numbers_title.append(s)
 
-        #print(character)
+            for character in title:
+                if  ( character.isdigit() or (count >= 1 and (character == "." or character == "," or character.isspace() ) ) ):
+                    temp.append(character)
+                    count+=1
+                elif count >= 1:
+                    count = 0
+                    s = ''.join(temp)
+                    s.strip()
+                    temp = []
+                    numbers_title.append(s)
 
-    if count >= 1:
-        count = 0
-        s = ''.join(temp)
-        s.strip()
-        temp = []
-        numbers_title.append(s)
-    
-    
-    selector = -1
-    if(len(numbers_title) == 0) or (len(numbers_title) > 1) :
-        numbers_title.append("Something fucked up in the number")
-        print("Numbers found in the title -> " + str(numbers_title))
-        print("Length of the list of numbers in the title -> " + str(len(numbers_title)))
+                #print(character)
 
-        while int(selector) < 0 or int(selector) >= len(numbers_title):
-            print("Numbers found in the title -> " + str(numbers_title))
-            selector =  input("There's multiple numbers in the title, please choose which one should be the mmo number(index starts at 0)")
-            if selector.strip() == "100" :
-                mmo_number = input("Input the MMO number now:")
-                return mmo_number
-            elif (int(selector) > len(numbers_title) ) or (int(selector) < 0 ) or selector is None :
-                print("Number chosen is out of bounds")
+            if count >= 1:
+                count = 0
+                s = ''.join(temp)
+                s.strip()
+                temp = []
+                numbers_title.append(s)
+            
+            
+            selector = -1
+            if(len(numbers_title) == 0) or (len(numbers_title) > 1) :
+                numbers_title.append("Something fucked up in the number")
+                print("Numbers found in the title -> " + str(numbers_title))
+                print("Length of the list of numbers in the title -> " + str(len(numbers_title)))
 
-#    print("Numbers found")
-#    print(numbers_title)
-    mmo_number = numbers_title[int(selector)]
+                while int(selector) < 0 or int(selector) >= len(numbers_title):
+                    print("Numbers found in the title -> " + str(numbers_title))
+                    selector =  input("There's multiple numbers in the title, please choose which one should be the mmo number(index starts at 0)")
+                    if selector.strip() == "100" :
+                        mmo_number = input("Input the MMO number now:")
+                        return mmo_number
+                    elif (int(selector) > len(numbers_title) ) or (int(selector) < 0 ) or selector is None :
+                        print("Number chosen is out of bounds")
 
-    mmo_number = unicodedata.normalize('NFKC', mmo_number)
-    
-    mmo_number = mmo_number.strip()
-#    print("MMO_Number" +  str(mmo_number))
-    return mmo_number
+        #    print("Numbers found")
+        #    print(numbers_title)
+            mmo_number = numbers_title[int(selector)]
+
+            mmo_number = unicodedata.normalize('NFKC', mmo_number)
+            
+            mmo_number = mmo_number.strip()
+        #    print("MMO_Number" +  str(mmo_number))
+        
+        return mmo_number
 
 def discover_upload_timestamp(twitter_source_list):
 
@@ -417,7 +685,7 @@ def main():
 
     fan_extra_comment()
 
-    data = populate_json(post_ids)
+    data = populate_mmo_json(post_ids)
 
     mmo_json["data"] = data
     
