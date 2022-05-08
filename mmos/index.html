@@ -19,7 +19,7 @@
         <div id="div_mmo_template" style="display: grid; grid-template-columns: auto auto;">
             <div id="div_mmo_image_template" style="vertical-align: middle;">
                 <img id="img_mmo_template" src="${data.preview_file_url}" class="img-fluid img-thumbnail">
-                <p id="p_mmo_template">Monday Morning Offer # ${data.mmo_number}</p>
+                <p id="p_mmo_template">Monday Morning Offering # ${data.mmo_number}</p>
             </div>
 
             <div id="div_mmo_info_template">
@@ -135,9 +135,43 @@
         </div>
     </template>
 
+
+    <template id="checkbox-character-template">
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="character" value=${data}>
+            <label class="form-check-label" for="flexCheckIndeterminate">
+                ${data}
+            </label>
+        </div>
+    </template>
+
+    <template id="checkbox-content-tag-template">
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="character" value=${data}>
+            <label class="form-check-label" for="flexCheckIndeterminate">
+                ${data}
+            </label>
+        </div>
+    </template>
+
+    <template id="checkbox-copyright-tag-template">
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="character" value=${data}>
+            <label class="form-check-label" for="flexCheckIndeterminate">
+                ${data}
+            </label>
+        </div>
+    </template>
+
+
+
     <div id="navbar">
 
     </div>
+
+    <script>
+        $("#navbar").load('../Tawawa-Tool/navbar/navbar.html');
+    </script>
 
 
     <div id="div_mmo_form" style="margin-top : 2rem;">
@@ -145,14 +179,82 @@
             <div class="col-md">
                 <div class="form-floating">
                     <label for="floatingInputGrid">Please input the range of MMOs to search through</label>
-                </div>                
+                </div>
                 <div id="slider">
                 </div>
                 <div class="form-floating">
-                    <input type="email" class="form-control" id="floatingInputGrid" placeholder="name@example.com"
-                        value="mdo@example.com">
-                    <label for="floatingInputGrid">Email address</label>
+                    <input type="text" class="form-control" id="floatingInputGrid" placeholder="" value="">
+                    <label for="floatingInputGrid">Tweet ID</label>
                 </div>
+
+                <div class="form-floating">
+                    <input type="text" class="form-control" id="floatingInputGrid" placeholder="" value="">
+                    <label for="floatingInputGrid">Danbooru ID</label>
+                </div>
+
+                <div class="form-floating">
+                    <input type="date" class="form-control" id="floatingInputGrid" placeholder="" value="">
+                    <label for="floatingInputGrid">Start Date</label>
+                </div>
+
+                <div class="form-floating">
+                    <input type="date" class="form-control" id="floatingInputGrid" placeholder="" value="">
+                    <label for="floatingInputGrid">End Date</label>
+                </div>
+
+                <div id="checkbox-characters">
+
+                </div>
+
+                <!-- Button trigger modal -->
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
+                    Click here to add Character filters
+                </button>
+
+                <!-- Modal -->
+                <div class="modal fade modal-dialog modal-dialog-scrollable" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false"
+                    tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="staticBackdropLabel">Filter your search by character</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close">
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                
+                                <div class="form-floating">
+                                    <input type="text" class="form-control" id="floatingInputGrid" placeholder="" value="" onkeyup="updateContenttagTable()">
+                                    <label for="floatingInputGrid">Search Characters Here</label>
+                                </div>
+                                <table class="table table-striped table-dark table-bordered table-hover" id="modal-table-characters">
+                                    <thead>
+                                        <tr>
+                                            <th>
+                                                Character
+                                            </th>
+                                            <th>
+                                                Number of occurrences
+                                            </th>
+                                            <th>
+                                                Action
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button type="button" class="btn btn-primary">Add selection</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="form-floating">
                     <select class="form-select" id="floatingSelectGrid" aria-label="Floating label select example">
                         <option selected>Open this select menu</option>
@@ -162,12 +264,44 @@
                     </select>
                     <label for="floatingSelectGrid">Works with selects</label>
                 </div>
+
+                <div id="checkbox-content-tag">
+
+                </div>
+
             </div>
             <div class="col-md">
             </div>
         </div>
     </div>
 
+    <template id="table-row-template-content-tag">
+        <tr>
+            <td>
+                ${data.content_tag_name}
+            </td>
+            <td>
+                ${data.content_tag_count}
+            </td>
+            <td>
+                <button type="button" class="btn btn-outline-primary" onclick="addContentTagSearch(${data})">Add</button>
+            </td>
+        </tr>
+    </template>
+
+    <template id="table-row-template-character-tag">
+        <tr>
+            <td>
+                ${data.character_tag_name}
+            </td>
+            <td>
+                ${data.character_tag_count}
+            </td>
+            <td>
+                <button type="button" class="btn btn-outline-primary" onclick="addCharacterTagSearch(${data})">Add</button>
+            </td>
+        </tr>
+    </template>
 
     <div id="content" style="display:grid ; grid-template-columns: auto">
 
@@ -181,10 +315,7 @@
         integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
         crossorigin="anonymous"></script>
     <script src="https://www.w3schools.com/lib/w3.js"></script>
-    
-    <script>
-        $("#navbar").load('../navbar/navbar.html');
-        </script>
+
     <script src="../nouislider.min.js"></script>
     <script src="mmos.js"></script>
 </body>
