@@ -103,7 +103,7 @@ def populate_timestamp_info_mmo(data , twitter_posts_id):
         data[key] = mmo
 
         print(data[key])
-        input()
+        #input()
     return data
 
 def populate_mmo_info(mmo_number , post_json, post_commentary_json):
