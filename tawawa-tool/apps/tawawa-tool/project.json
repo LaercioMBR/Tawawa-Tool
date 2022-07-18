@@ -1,0 +1,98 @@
+{
+  "projectType": "application",
+  "sourceRoot": "apps/tawawa-tool/src",
+  "prefix": "tawawa-tool",
+  "targets": {
+    "build": {
+      "executor": "@angular-devkit/build-angular:browser",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/tawawa-tool",
+        "index": "apps/tawawa-tool/src/index.html",
+        "main": "apps/tawawa-tool/src/main.ts",
+        "polyfills": "apps/tawawa-tool/src/polyfills.ts",
+        "tsConfig": "apps/tawawa-tool/tsconfig.app.json",
+        "inlineStyleLanguage": "scss",
+        "assets": [
+          "apps/tawawa-tool/src/favicon.ico",
+          "apps/tawawa-tool/src/assets"
+        ],
+        "styles": [
+          "apps/tawawa-tool/src/styles.scss",
+          "node_modules/primeicons/primeicons.css",
+          "node_modules/primeng/resources/themes/lara-light-blue/theme.css",
+          "node_modules/primeng/resources/primeng.min.css"
+        ],
+        "scripts": []
+      },
+      "configurations": {
+        "production": {
+          "budgets": [
+            {
+              "type": "initial",
+              "maximumWarning": "500kb",
+              "maximumError": "1mb"
+            },
+            {
+              "type": "anyComponentStyle",
+              "maximumWarning": "2kb",
+              "maximumError": "4kb"
+            }
+          ],
+          "fileReplacements": [
+            {
+              "replace": "apps/tawawa-tool/src/environments/environment.ts",
+              "with": "apps/tawawa-tool/src/environments/environment.prod.ts"
+            }
+          ],
+          "outputHashing": "all"
+        },
+        "development": {
+          "buildOptimizer": false,
+          "optimization": false,
+          "vendorChunk": true,
+          "extractLicenses": false,
+          "sourceMap": true,
+          "namedChunks": true
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "serve": {
+      "executor": "@angular-devkit/build-angular:dev-server",
+      "configurations": {
+        "production": {
+          "browserTarget": "tawawa-tool:build:production"
+        },
+        "development": {
+          "browserTarget": "tawawa-tool:build:development"
+        }
+      },
+      "defaultConfiguration": "development"
+    },
+    "extract-i18n": {
+      "executor": "@angular-devkit/build-angular:extract-i18n",
+      "options": {
+        "browserTarget": "tawawa-tool:build"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "apps/tawawa-tool/**/*.ts",
+          "apps/tawawa-tool/**/*.html"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/apps/tawawa-tool"],
+      "options": {
+        "jestConfig": "apps/tawawa-tool/jest.config.ts",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "tags": []
+}

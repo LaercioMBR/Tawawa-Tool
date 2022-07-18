@@ -1,0 +1,144 @@
+<p-card header="What this series is">
+  <p>
+    An immensely popular original fanservice (often if not always centered around breasts) image series created by
+    Himura Kiseki on Twitter as "offerings to the corporate wageslaves heading in to work on Monday mornings".
+  </p>
+
+  <p>
+    Began on February 22, 2015 with <a href="https://twitter.com/Strangestone/status/569617644472573952">this tweet</a>
+  </p>
+
+  <p>
+    For over a year, it lacked any substantial commentary to go along with the images; during 2016, it started to bear
+    some semblance of continuity, and a few reoccurring characters were given simple names for the first time.
+  </p>
+
+  <p>
+    Since then, there has been more than 15 recurring "named" Tawawas. With more being added every few months or so.
+  </p>
+
+
+  <p>
+    The image series is also notable for distinctive blue-and-white monochrome coloration. (Which - although likely
+    unintentional - also goes with the theme of "monday blues")
+  </p>
+
+  <p>
+    It also received an online 12-episode anime adaptation consisting of short five minute episodes starting on October
+    9, 2016. The series was given its own ending song by Ai's voice actress Harada Sayaka, but not an opening song. With
+    2 extra OVAs sold together with the BDs.
+  </p>
+  <p>
+    At the end of 2020, it got an official serialization in the YanManga Magazine. It is an more standard manga series
+    with 15~ish pages released weekly. Retelling all of the stories of the various Tawawas in the original Twitter
+    series in a singular, cohesive and cronological order. It also adds tons of character interactions that weren't
+    present in the original Twitter series.
+  </p>
+  <p>
+
+    At the end of 2021, it got a second season of the anime, releasing every Monday together with the first animated
+    season of the Ganbare Douki-chan series, both of them continuing with the ONA style of short five minute episodes
+    available mostly through internet means.
+  </p>
+
+</p-card>
+
+<p-card header="Read/Watch Order">
+  <h3>
+    Read
+  </h3>
+  <ol type="1">
+    <li>
+      Read every single one of the Comiket Volumes.
+    </li>
+    <li>
+      Read the remaining Twitter Webcomic episodes(MMOs) on Danbooru.
+    </li>
+    <li>
+      Read the Serialization
+    </li>
+  </ol>
+
+  <p>
+    Almost all of the above have multiple coloring options available so you could potentially read it in either Black
+    and White, Blue Monochrome or Full Colored.
+  </p>
+  <p>
+    They are all either fan made or by the author themselves. So just read in whatever color you personally prefer from
+    the ones available.
+  </p>
+  <p>
+    But not all of the content has been fan-colored yet, so you will have to go back to the good old blue for the newest
+    releases).
+  </p>
+
+  <p-divider></p-divider>
+  <h3>
+    Watch
+  </h3>
+  <p>
+    You can watch the anime whenever you want really, of course going through the standard release order of:
+  </p>
+
+  <ol type="1">
+    <li>
+      Season 1
+    </li>
+    <li>
+      Season 1 OVAs
+    </li>
+    <li>
+      Season 2 OVAs
+    </li>
+    <li>
+      Possible Season 3
+    </li>
+  </ol>
+</p-card>
+
+<p-card header="Where to read/watch everything">
+  <h3>
+    Twitter Webcomic / Monday Morning Offerings (MMOs)
+  </h3>
+  <p-table [value]="link_mmos" responsiveLayout="scroll">
+
+    <ng-template pTemplate="header">
+      <tr>
+        <th *ngFor="let col of cols" pSortableColumn="{{col.field}}">
+          {{col.header}}
+          <p-sortIcon field="{{col.field}}"></p-sortIcon>
+        </th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-link_mmo>
+      <tr>
+        <ng-container *ngFor="let col of cols">
+          <ng-container *ngIf="col.field === 'name'; else field_not_name">
+            <td>
+              <a href="{{link_mmo[col.field]}}">{{link_mmo.name}}</a>
+            </td>
+          </ng-container>
+          <ng-template #field_not_name>
+            <ng-container *ngIf="link_mmo[col.field] === true; else field_not_true">
+              <td>
+                Yes
+              </td>
+            </ng-container>
+            <ng-template #field_not_true>
+              <ng-container *ngIf="link_mmo[col.field] === false; else field_not_boolean">
+                <td>
+                  No
+                </td>
+              </ng-container>
+            </ng-template>
+            <ng-template #field_not_boolean>
+              <td>
+                {{link_mmo[col.field]}}
+              </td>
+            </ng-template>
+          </ng-template>
+        </ng-container>
+      </tr>
+    </ng-template>
+  </p-table>
+</p-card>
