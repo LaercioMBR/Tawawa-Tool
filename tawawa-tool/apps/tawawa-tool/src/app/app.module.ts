@@ -19,6 +19,12 @@ import { TableModule } from 'primeng/table';
 import { AngularFireModule } from '@angular/fire/compat';
 import { environment } from '../environments/environment';
 import { AngularFirestoreModule } from '@angular/fire/compat/firestore';
+import { MmoLinkGuideComponent } from './mmo-link-guide/mmo-link-guide.component';
+import { MangaLinkGuideComponent } from './manga-link-guide/manga-link-guide.component';
+import { AnimeLinkGuideComponent } from './anime-link-guide/anime-link-guide.component';
+import { ButtonModule } from 'primeng/button';
+import { FirestoreService } from './firestore.service';
+
 
 @NgModule({
   declarations: [
@@ -30,6 +36,9 @@ import { AngularFirestoreModule } from '@angular/fire/compat/firestore';
     MmoComponent,
     AnimeComponent,
     MangaComponent,
+    MmoLinkGuideComponent,
+    MangaLinkGuideComponent,
+    AnimeLinkGuideComponent,
   ],
   imports: [
     BrowserModule,
@@ -40,6 +49,7 @@ import { AngularFirestoreModule } from '@angular/fire/compat/firestore';
     CardModule,
     DividerModule,
     TableModule,
+    ButtonModule,
     AngularFireModule.initializeApp(environment.firebaseConfig),
     AngularFirestoreModule,
     RouterModule.forRoot([
@@ -51,7 +61,7 @@ import { AngularFirestoreModule } from '@angular/fire/compat/firestore';
       { path: 'manga', component: MangaComponent },
     ]),
   ],
-  providers: [],
+  providers: [FirestoreService],
   bootstrap: [AppComponent],
 })
 export class AppModule {}

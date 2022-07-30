@@ -1,0 +1,62 @@
+<h3>
+  Anime
+</h3>
+<p-table [value]="link_anime" responsiveLayout="scroll">
+
+  <ng-template pTemplate="header">
+    <tr>
+      <th *ngFor="let col of cols" pSortableColumn="{{col.field}}">
+        {{col.header}}
+        <p-sortIcon field="{{col.field}}"></p-sortIcon>
+      </th>
+    </tr>
+  </ng-template>
+
+
+  <ng-template pTemplate="groupheader" let-anime let-rowIndex="rowIndex" let-expanded="expanded">
+    <tr>
+        <td colspan="5">
+            <button type="button" pButton pRipple [pRowToggler]="anime" class="p-button-text p-button-rounded p-button-plain mr-2" [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></button>
+            <span class="font-bold ml-2">{{anime.name}}</span>
+        </td>
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="groupfooter" let-anime>
+    <tr class="p-rowgroup-footer">
+        <td colspan="4" style="text-align: right">Total Customers</td>
+        <td> </td>
+    </tr>
+</ng-template>
+
+  <ng-template pTemplate="rowexpansion" let-link_anime>
+    <tr>
+      <ng-container *ngFor="let col of cols">
+        <ng-container *ngIf="col.field === 'name'; else field_not_name">
+          <td>
+            <a href="{{link_anime.link}}">{{link_anime.name}}</a>
+          </td>
+        </ng-container>
+        <ng-template #field_not_name>
+          <ng-container *ngIf="link_anime[col.field] === true; else field_not_true">
+            <td>
+              Yes
+            </td>
+          </ng-container>
+          <ng-template #field_not_true>
+            <ng-container *ngIf="link_anime[col.field] === false; else field_not_boolean">
+              <td>
+                No
+              </td>
+            </ng-container>
+          </ng-template>
+          <ng-template #field_not_boolean>
+            <td>
+              {{link_anime[col.field]}}
+            </td>
+          </ng-template>
+        </ng-template>
+      </ng-container>
+    </tr>
+  </ng-template>
+</p-table>

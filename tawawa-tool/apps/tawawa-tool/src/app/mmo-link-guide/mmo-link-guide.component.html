@@ -1,0 +1,44 @@
+<h3>
+  Twitter Webcomic / Monday Morning Offerings (MMOs)
+</h3>
+<p-table [value]="link_mmos" responsiveLayout="scroll">
+
+  <ng-template pTemplate="header">
+    <tr>
+      <th *ngFor="let col of cols" pSortableColumn="{{col.field}}">
+        {{col.header}}
+        <p-sortIcon field="{{col.field}}"></p-sortIcon>
+      </th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-link_mmo>
+    <tr>
+      <ng-container *ngFor="let col of cols">
+        <ng-container *ngIf="col.field === 'name'; else field_not_name">
+          <td>
+            <a href="{{link_mmo.link}}">{{link_mmo.name}}</a>
+          </td>
+        </ng-container>
+        <ng-template #field_not_name>
+          <ng-container *ngIf="link_mmo[col.field] === true; else field_not_true">
+            <td>
+              Yes
+            </td>
+          </ng-container>
+          <ng-template #field_not_true>
+            <ng-container *ngIf="link_mmo[col.field] === false; else field_not_boolean">
+              <td>
+                No
+              </td>
+            </ng-container>
+          </ng-template>
+          <ng-template #field_not_boolean>
+            <td>
+              {{link_mmo[col.field]}}
+            </td>
+          </ng-template>
+        </ng-template>
+      </ng-container>
+    </tr>
+  </ng-template>
+</p-table>

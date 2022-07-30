@@ -1,6 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { MenuItem } from 'primeng/api';
 
+
+import {MenubarModule} from 'primeng/menubar';
+import {MenuItem} from 'primeng/api';
+
 @Component({
   selector: 'tawawa-tool-navbar',
   templateUrl: './navbar.component.html',
