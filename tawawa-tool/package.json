@@ -1,6 +1,6 @@
 {
   "name": "tawawa-tool",
-  "version": "0.0.0",
+  "version": "8.12.2",
   "license": "MIT",
   "scripts": {
     "ng": "nx",
